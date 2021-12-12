@@ -1,8 +1,8 @@
 /**
  * MozziScout version of "Control_Oscil_Wash" demo
  * 
- * MozziScout is Just like normal Scout,
- *  but pins 9 & 11 are swapped, so we can use Mozzi
+ * MozziScout is just like normal Scout,
+ * but pins 9 & 11 are swapped, so we can use Mozzi
  *  
  *  @todbot 12 Dec 2021
  */

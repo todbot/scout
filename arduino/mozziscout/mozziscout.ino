@@ -1,8 +1,21 @@
 /**
  *  MozziScout version of standard "scout" sketch
  *  
- *  MozziScout is Just like normal Scout,
- *  but pins 9 & 11 are swapped, so we can use Mozzi
+ *  MozziScout is just like normal Scout,
+ *  but pins 9 & 11 are swapped, so we can use Mozzi.
+ *
+ *  Arduino pins 9 & 11 are ATmega328 pins 15 & 17
+ *  Pin 9 is normally hooked up to the keyboard.
+ *  Pin 11 is normally the audio out.
+ *  The Mozzi library uses pin 9 for audio,
+ *  because that's on Timer1, 16-bit timer, unlike the 8-bit
+ *  Timer2 on pin 9.
+ *  So to make Scout work with Mozzi, swap the functions
+ *  of pins 9 & 11!
+ *
+ *  See 'mozziscout_pins.jpg' for one way to do this, where
+ *  the two legs of the ATmega328 chip are lifted, and
+ *  jumper wires are soldered on and plugged into the socket.
  *  
  * @todbot 12 Dec 2021
  */
