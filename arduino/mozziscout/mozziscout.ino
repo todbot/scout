@@ -66,7 +66,6 @@ void setup() {
   blink();
   
   startMozzi(); // start with default control rate of 64
-//  aSin.setFreq(1320); // set the frequency
 }
 
 void loop() {

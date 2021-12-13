@@ -1,5 +1,5 @@
 /**
- * MozziScout version of "Control_Oscil_Wash" demo
+ * MozziScout version sort of of Mozzi example "Control_Oscil_Wash"
  * 
  * MozziScout is just like normal Scout,
  * but pins 9 & 11 are swapped, so we can use Mozzi
@@ -13,13 +13,14 @@
 #include <tables/cos8192_int8.h>
 #include <mozzi_midi.h> // for mtof()
 #include <ADSR.h>
+#include <Portamento.h>
 
 // SETTINGS
-int octave = 3;
+int octave = 2;
 
 KeyBuffer buffer;
 
-#define CONTROL_RATE 128
+#define CONTROL_RATE 64
 
 // harmonics
 Oscil<COS8192_NUM_CELLS, AUDIO_RATE> aCos1(COS8192_DATA);
@@ -42,6 +43,9 @@ Oscil<COS8192_NUM_CELLS, CONTROL_RATE> kVol5(COS8192_DATA);
 //Oscil<COS8192_NUM_CELLS, CONTROL_RATE> kVol8(COS8192_DATA);
 
 ADSR <CONTROL_RATE, AUDIO_RATE> envelope;
+Portamento <CONTROL_RATE> portamento1;
+Portamento <CONTROL_RATE> portamento2;
+Portamento <CONTROL_RATE> portamento3;
 
 // audio volumes updated each control interrupt and reused in audio till next control
 char v1, v2, v3, v4, v5, v6, v7, v8;
@@ -62,22 +66,12 @@ void setup() {
 
   blink();
 
-  // set harmonic frequencies
-  aCos1.setFreq(mtof(60));
-  aCos2.setFreq(mtof(74));
-  aCos3.setFreq(mtof(64));
-  aCos4.setFreq(mtof(77));
-  aCos5.setFreq(mtof(67));
-  //  aCos6.setFreq(mtof(81));
-  //  aCos7.setFreq(mtof(60));
-  //  aCos8.setFreq(mtof(84));
-
   // set volume change frequencies
   kVol1.setFreq(2.43f); // more of a pulse
-  kVol2.setFreq(0.0245f);
-  kVol3.setFreq(0.019f);
-  kVol4.setFreq(0.07f);
-  kVol5.setFreq(0.047f);
+  kVol2.setFreq(0.245f);
+  kVol3.setFreq(0.19f);
+  kVol4.setFreq(0.17f);
+  kVol5.setFreq(0.47f);
   //  kVol6.setFreq(0.031f);
   //  kVol7.setFreq(0.0717f);
   //  kVol8.setFreq(0.041f);
@@ -87,7 +81,10 @@ void setup() {
 
   envelope.setADLevels(255, 64);
   envelope.setTimes(150, 200, 10000, 1000); // 10000 is so the note will sustain 10 seconds unless a noteOff comes
-
+  portamento1.setTime(100u);
+  portamento2.setTime(300u);
+  portamento3.setTime(500u);
+  
   startMozzi(); // start with default control rate of 64
 }
 
@@ -97,9 +94,12 @@ void loop() {
 
 
 void updateControl() {
+  buffer.populate(); // get keys
   envelope.update();
-  buffer.populate();
-
+  aCos1.setFreq_Q16n16(portamento1.next());
+  aCos2.setFreq_Q16n16(portamento2.next());
+  aCos3.setFreq_Q16n16(portamento3.next());
+  
   v1 = kVol1.next(); // >> 1; // going at a higher freq, this creates zipper noise, so reduce the gain
   v2 = kVol2.next();
   v3 = kVol3.next();
@@ -113,14 +113,18 @@ void updateControl() {
     envelope.noteOff();
   }
   else { // we have keypresses
-    int keynum = buffer.getFirst() + (octave * 12) - 36;
+    byte note = 60 + (octave * 12) - 36 + buffer.getFirst(); // FIXME
+    
+    portamento1.start((byte)(note+0));
+    portamento2.start((byte)(note+5));
+    portamento2.start((byte)(note+7));
     envelope.noteOn();
-
-    aCos1.setFreq(mtof(60 + keynum));
-    aCos2.setFreq(mtof(74 + keynum));
-    aCos3.setFreq(mtof(64 + keynum));
-    aCos4.setFreq(mtof(77 + keynum));
-    aCos5.setFreq(mtof(67 + keynum));
+  
+//    aCos1.setFreq(mtof(note + 0));
+//    aCos2.setFreq(mtof(note + 5));
+//    aCos3.setFreq(mtof(note + 7));
+    aCos4.setFreq(mtof(note + 10));
+    aCos5.setFreq(mtof(note - 12));
     //   aCos6.setFreq(mtof(81+keynum));
     //   aCos7.setFreq(mtof(60+keynum));
     //   aCos8.setFreq(mtof(84+keynum));
@@ -129,7 +133,7 @@ void updateControl() {
 
 AudioOutput_t updateAudio() {
   long asig = (long)
-              aCos1.next() * v1 +
+              aCos1.next() * v1 + 
               aCos2.next() * v2 +
               aCos3.next() * v3 +
               aCos4.next() * v4 +
@@ -137,6 +141,6 @@ AudioOutput_t updateAudio() {
 //              aCos6.next()*v6 +
 //              aCos7.next()*v7 +
 //              aCos8.next()*v8;
-  // 26 bits, up from 18, because of envelope
+  // 26 bits = 8 bits envelope + 18 bits signal
   return MonoOutput::fromAlmostNBit(26, envelope.next() * asig);
 }
