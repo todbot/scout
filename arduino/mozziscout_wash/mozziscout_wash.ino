@@ -17,6 +17,9 @@
 
 // SETTINGS
 int octave = 2;
+//int chord_notes[5] = {0,5,7,10,-12};
+//int chord_notes[5] = {0,4,7,12,0};
+int chord_notes[5] = {0,3,7,10,14};
 
 KeyBuffer buffer;
 
@@ -28,9 +31,6 @@ Oscil<COS8192_NUM_CELLS, AUDIO_RATE> aCos2(COS8192_DATA);
 Oscil<COS8192_NUM_CELLS, AUDIO_RATE> aCos3(COS8192_DATA);
 Oscil<COS8192_NUM_CELLS, AUDIO_RATE> aCos4(COS8192_DATA);
 Oscil<COS8192_NUM_CELLS, AUDIO_RATE> aCos5(COS8192_DATA);
-//Oscil<COS8192_NUM_CELLS, AUDIO_RATE> aCos6(COS8192_DATA);
-//Oscil<COS8192_NUM_CELLS, AUDIO_RATE> aCos7(COS8192_DATA);
-//Oscil<COS8192_NUM_CELLS, AUDIO_RATE> aCos8(COS8192_DATA);
 
 // volume controls
 Oscil<COS8192_NUM_CELLS, CONTROL_RATE> kVol1(COS8192_DATA);
@@ -38,9 +38,6 @@ Oscil<COS8192_NUM_CELLS, CONTROL_RATE> kVol2(COS8192_DATA);
 Oscil<COS8192_NUM_CELLS, CONTROL_RATE> kVol3(COS8192_DATA);
 Oscil<COS8192_NUM_CELLS, CONTROL_RATE> kVol4(COS8192_DATA);
 Oscil<COS8192_NUM_CELLS, CONTROL_RATE> kVol5(COS8192_DATA);
-//Oscil<COS8192_NUM_CELLS, CONTROL_RATE> kVol6(COS8192_DATA);
-//Oscil<COS8192_NUM_CELLS, CONTROL_RATE> kVol7(COS8192_DATA);
-//Oscil<COS8192_NUM_CELLS, CONTROL_RATE> kVol8(COS8192_DATA);
 
 ADSR <CONTROL_RATE, AUDIO_RATE> envelope;
 Portamento <CONTROL_RATE> portamento1;
@@ -48,7 +45,7 @@ Portamento <CONTROL_RATE> portamento2;
 Portamento <CONTROL_RATE> portamento3;
 
 // audio volumes updated each control interrupt and reused in audio till next control
-char v1, v2, v3, v4, v5, v6, v7, v8;
+char v1, v2, v3, v4, v5;
 
 void blink(int count = 2, int wait = 200) {
   while (count >= 0) {
@@ -61,7 +58,7 @@ void blink(int count = 2, int wait = 200) {
 }
 
 void setup() {
-  Serial.begin(11500);
+  Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
 
   blink();
@@ -72,18 +69,14 @@ void setup() {
   kVol3.setFreq(0.19f);
   kVol4.setFreq(0.17f);
   kVol5.setFreq(0.47f);
-  //  kVol6.setFreq(0.031f);
-  //  kVol7.setFreq(0.0717f);
-  //  kVol8.setFreq(0.041f);
 
-  v1 = v2 = v3 = v4 = 255;
-  v5 = v6 = v7 = v8 = 255;
+  v1 = v2 = v3 = v4 = v5 = 255;
 
   envelope.setADLevels(255, 64);
   envelope.setTimes(150, 200, 10000, 1000); // 10000 is so the note will sustain 10 seconds unless a noteOff comes
   portamento1.setTime(100u);
-  portamento2.setTime(300u);
-  portamento3.setTime(500u);
+  portamento2.setTime(100u);
+  portamento3.setTime(100u);
   
   startMozzi(); // start with default control rate of 64
 }
@@ -105,9 +98,6 @@ void updateControl() {
   v3 = kVol3.next();
   v4 = kVol4.next();
   v5 = kVol5.next();
-  //   v6 = kVol6.next();
-  //   v7 = kVol7.next();
-  //   v8 = kVol8.next();
 
   if (buffer.isEmpty()) {
     envelope.noteOff();
@@ -115,19 +105,16 @@ void updateControl() {
   else { // we have keypresses
     byte note = 60 + (octave * 12) - 36 + buffer.getFirst(); // FIXME
     
-    portamento1.start((byte)(note+0));
-    portamento2.start((byte)(note+5));
-    portamento2.start((byte)(note+7));
+    portamento1.start((byte)(note+chord_notes[0]));
+    portamento2.start((byte)(note+chord_notes[1]));
+    portamento2.start((byte)(note+chord_notes[2]));
     envelope.noteOn();
-  
+
 //    aCos1.setFreq(mtof(note + 0));
 //    aCos2.setFreq(mtof(note + 5));
 //    aCos3.setFreq(mtof(note + 7));
-    aCos4.setFreq(mtof(note + 10));
-    aCos5.setFreq(mtof(note - 12));
-    //   aCos6.setFreq(mtof(81+keynum));
-    //   aCos7.setFreq(mtof(60+keynum));
-    //   aCos8.setFreq(mtof(84+keynum));
+    aCos4.setFreq(mtof((byte)(note + chord_notes[3])));
+    aCos5.setFreq(mtof((byte)(note + chord_notes[4])));
   }
 }
 
@@ -137,10 +124,7 @@ AudioOutput_t updateAudio() {
               aCos2.next() * v2 +
               aCos3.next() * v3 +
               aCos4.next() * v4 +
-              aCos5.next() * v5; // +
-//              aCos6.next()*v6 +
-//              aCos7.next()*v7 +
-//              aCos8.next()*v8;
+              aCos5.next() * v5;
   // 26 bits = 8 bits envelope + 18 bits signal
   return MonoOutput::fromAlmostNBit(26, envelope.next() * asig);
 }
