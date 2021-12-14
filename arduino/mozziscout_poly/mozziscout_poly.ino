@@ -59,9 +59,9 @@ void blink(int count = 2, int wait = 200) {
 void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
+  keys.addEventListener(keypadEvent); // Add an event listener for this keypad
 
   blink();
-  keys.addEventListener(keypadEvent); // Add an event listener for this keypad
 
   for ( int i = 0; i < NUM_VOICES; i++) {
     myEnvs[i].setADLevels(255, 255);
@@ -121,7 +121,7 @@ void keypadEvent(KeypadEvent key) {
   }
   Serial.print("note_list:"); 
   for(int i=0; i<NUM_VOICES;i++) { Serial.print(note_list[i]); Serial.print(',');}
-  Serial.println();  
+  Serial.println();
 }
 
 void updateControl() {
