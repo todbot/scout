@@ -22,6 +22,8 @@ slug: /
 2. _Jean Louise “Scout” Finch, of Atticus Finch_
 3. _The first synth from Oskitone to venture into the big ol' world of microcontrollers_
 
+![A finished Scout](/img/scout.jpg)
+
 The Scout is:
 
 - **Beginner-friendly:** All components are through-hole (instead of surface mount) for easier soldering, and full assembly takes about 45min. Standalone, battery-powered, doesn't need a computer or external speakers to work. Fun!
@@ -50,3 +52,7 @@ Not a toy. Choking hazard. Small parts. Not for children under 3 years.
 To save cost, trees, and frustration from outdated information, printed instructions are not included by default with Scout kits. This online guide will always be up to date and be the best source of information for how to assembly your new Scout.
 
 Thank you for understanding!
+
+:::note
+If you run into any problems with your build or something in the guide seems incorrect, please [please _email_ me to let me know](https://www.oskitone.com/contact)! I'll do my best to help you, and your feedback will help improve the guide and other future Oskitone designs.
+:::
